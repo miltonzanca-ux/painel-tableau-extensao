@@ -13,7 +13,7 @@ function ajustaPalco() {
 window.addEventListener('resize', () => { ajustaPalco(); renderizarGrafico(); });
 ajustaPalco();
 
-// Conexão com o Tableau
+// Conexão com a Extensão do Tableau
 tableau.extensions.initializeAsync().then(() => {
   document.getElementById('rod').innerText = 'Conectado ao Tableau com sucesso. Dados sincronizados.';
   carregarDadosTableau();
@@ -43,7 +43,7 @@ async function carregarDadosTableau() {
     allColumns = summaryData.columns;
     rawData = summaryData.data;
 
-    gerarBotoesUF();
+    populaSelectUF();
     renderizarPainel();
 
   } catch (error) {
@@ -51,7 +51,8 @@ async function carregarDadosTableau() {
   }
 }
 
-function gerarBotoesUF() {
+// Preenche as opções do filtro suspenso dinamicamente
+function populaSelectUF() {
   const ufs = new Set();
   
   rawData.forEach(row => {
@@ -59,25 +60,25 @@ function gerarBotoesUF() {
     if (ufVal) ufs.add(ufVal);
   });
 
-  const container = document.getElementById('ufContainer');
-  container.innerHTML = `
-    <span class="${selectedUF === 'TODOS' ? 'active' : ''}" onclick="filtrarUF('TODOS')">TODOS</span>
-  `;
+  const select = document.getElementById('ufSelect');
+  
+  // Preserva a opção "TODOS" e adiciona as UFs encontradas
+  select.innerHTML = '<option value="TODOS">TODAS AS UFs</option>';
 
   Array.from(ufs).sort().forEach(uf => {
-    const span = document.createElement('span');
-    span.className = selectedUF === uf ? 'active' : '';
-    span.onclick = () => filtrarUF(uf);
-    span.innerText = uf;
-    container.appendChild(span);
+    const opt = document.createElement('option');
+    opt.value = uf;
+    opt.innerText = `UF: ${uf}`;
+    if (uf === selectedUF) opt.selected = true;
+    select.appendChild(opt);
   });
 }
 
 function filtrarUF(uf) {
   selectedUF = uf;
-  gerarBotoesUF();
   renderizarPainel();
 
+  // Aplica o filtro diretamente na planilha nativa do Tableau
   const dashboard = tableau.extensions.dashboardContent.dashboard;
   const worksheet = dashboard.worksheets.find(ws => ws.name === 'PlanTeste') || dashboard.worksheets[0];
 
@@ -110,7 +111,7 @@ function renderizarPainel() {
     });
   });
 
-  document.getElementById('selectedUfText').innerText = selectedUF;
+  document.getElementById('selectedUfText').innerText = selectedUF === 'TODOS' ? 'TODAS' : selectedUF;
   document.getElementById('kpiApto').innerText = totalApto.toLocaleString('pt-BR');
   document.getElementById('kpiEnf').innerText = totalEnf.toLocaleString('pt-BR');
   document.getElementById('kpiSuperior').innerText = totalSuperior.toLocaleString('pt-BR');
@@ -154,19 +155,16 @@ function renderizarGrafico() {
   const ufs = Array.from(new Set(rawData.map(r => r[0].formattedValue || r[0].value)));
   const n = ufs.length;
 
-  // Pontos base para o SVG
   const x = i => m.l + (i + 0.5) * (W - m.l - m.r) / (n || 1);
   const maxVal = 3000;
   const y = v => m.t + (1 - (v / maxVal)) * (H - m.t - m.b);
 
   let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
 
-  // Linhas de Grade
   [1000, 2000, 3000].forEach(v => {
     s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="#1E3B37" stroke-width="1" stroke-dasharray="4 4"/>`;
   });
 
-  // Plotagem dos dados das UFs
   ufs.forEach((uf, i) => {
     const row = rawData.find(r => (r[0].formattedValue || r[0].value) === uf);
     let val = 0;
