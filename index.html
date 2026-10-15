@@ -116,23 +116,24 @@ header {
   z-index: 10;
 }
 
-/* MOLDURA DO LOGO UNIMED CNU */
+/* MOLDURA PARA A LOGO CNU */
 .logo-box-container {
-  width: 160px;
+  width: 158px;
   height: 58px;
-  background: #00995D; /* Verde Unimed Oficial */
+  background: #00995D; /* Verde Unimed original */
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.2);
+  overflow: hidden;
+  border: 1px solid var(--bd2);
 }
 
-.logo-box-container svg {
+.logo-box-container img {
   width: 100%;
   height: 100%;
+  object-fit: cover; /* Preenche a caixa perfeitamente sem deformar */
+  display: block;
 }
 
 .pill {
@@ -312,19 +313,25 @@ footer {
 <div id="palco">
   <div class="root">
     
+<!-- CABEÇALHO COM A SUA IMAGEM DO GITHUB -->
     <header>
-      <!-- VETORIZAÇÃO SVG DA LOGO UNIMED CNU PERFEITA -->
       <div class="logo-box-container">
-        <svg viewBox="0 0 240 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Unimed Tipografia -->
-          <text x="5" y="44" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-weight="900" font-size="34" letter-spacing="-1">Unimed</text>
-          <!-- Pinheiros Unimed -->
-          <path d="M148 18 L138 29 H143 L134 38 H139 L129 48 H153 L144 38 H149 L140 29 H145 L135 18 Z" fill="#FFFFFF"/>
-          <path d="M165 18 L155 29 H160 L151 38 H156 L146 48 H170 L161 38 H166 L157 29 H162 L152 18 Z" fill="#FFFFFF"/>
-          <!-- CNU Subtexto -->
-          <text x="128" y="60" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-weight="800" font-size="14" letter-spacing="1">CNU</text>
-        </svg>
+        <!-- Nome exato da imagem presente no seu GitHub -->
+        <img src="LOGO%20CNU.jpg" alt="Unimed CNU Logo">
       </div>
+      <div style="width:1px;height:56px;background:var(--bd2)"></div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="font-size:18px;font-weight:700;letter-spacing:.14em;color:var(--gold)">SALA DE SITUAÇÃO · PROJEÇÃO POR AUTORIZAÇÕES</div>
+        <div style="font-size:38px;font-weight:800;line-height:1">Projeção de Custo por Autorizações</div>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:36px">
+        <div class="pill"><span class="dot" style="background:var(--proj);"></span>TV 3 · AUTORIZAÇÕES → CUSTO</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <div style="font-size:40px;font-weight:700;line-height:1">15/10</div>
+          <div style="font-size:18px;color:var(--ok);white-space:nowrap;font-weight:500;">● projeção do dia, às 9h</div>
+        </div>
+      </div>
+    </header>
 
       <div style="width:1px;height:56px;background:var(--bd2)"></div>
       <div style="display:flex;flex-direction:column;gap:6px">
