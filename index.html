@@ -314,9 +314,10 @@ footer {
   <div class="root">
     
     <header>
-      <!-- CAIXA DE LOGO NO LOCAL EXATO (158px x 58px) -->
+      <!-- CAIXA DE LOGO EXATA E LIMPA -->
       <div class="logo-box-container">
-        <img src="logo-cnu.png" alt="Unimed CNU Logo">
+        <!-- Tenta carregar logo-cnu.jpg, com fallback para logo-cnu.png caso seja PNG -->
+        <img src="logo-cnu.jpg" onerror="this.onerror=null; this.src='logo-cnu.png';" alt="Unimed CNU Logo">
       </div>
       <div style="width:1px;height:56px;background:var(--bd2)"></div>
       <div style="display:flex;flex-direction:column;gap:6px">
