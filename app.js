@@ -1,69 +1,135 @@
+let rawData = [];
+let allColumns = [];
+let selectedUF = 'TODOS';
+
 tableau.extensions.initializeAsync().then(() => {
-  const statusDiv = document.getElementById('status');
-  statusDiv.innerText = '✅ Conectado com sucesso ao Tableau!';
+  document.getElementById('statusText').innerText = 'Online • Tableau Connected';
+  carregarEProcessarDados();
 
-  // Carrega os dados da planilha
-  carregarDados();
-
-  // Adiciona escutadores de eventos para atualizar dinamicamente se o usuário filtrar ou clicar em algo
   const dashboard = tableau.extensions.dashboardContent.dashboard;
   const worksheet = dashboard.worksheets.find(ws => ws.name === 'PlanTeste') || dashboard.worksheets[0];
 
   if (worksheet) {
-    worksheet.addEventListener(tableau.TableauEventType.FilterChanged, carregarDados);
-    worksheet.addEventListener(tableau.TableauEventType.MarkSelectionChanged, carregarDados);
+    worksheet.addEventListener(tableau.TableauEventType.FilterChanged, carregarEProcessarDados);
+    worksheet.addEventListener(tableau.TableauEventType.MarkSelectionChanged, carregarEProcessarDados);
   }
 }).catch((err) => {
-  document.getElementById('status').innerText = '❌ Erro ao inicializar extensão: ' + err.toString();
+  document.getElementById('statusText').innerText = 'Erro na Conexão';
+  console.error(err);
 });
 
-async function carregarDados() {
+async function carregarEProcessarDados() {
   const dashboard = tableau.extensions.dashboardContent.dashboard;
-  
-  // Procura especificamente a planilha "PlanTeste" ou pega a primeira disponível
   const worksheet = dashboard.worksheets.find(ws => ws.name === 'PlanTeste') || dashboard.worksheets[0];
 
-  if (!worksheet) {
-    document.getElementById('status').innerText = '⚠️ Planilha "PlanTeste" não encontrada no Dashboard.';
-    return;
-  }
+  if (!worksheet) return;
 
   try {
-    // Busca os dados resumidos visíveis no gráfico da planilha
     const summaryData = await worksheet.getSummaryDataAsync();
+    allColumns = summaryData.columns;
+    rawData = summaryData.data;
+
+    // Gerar os botões de UF dinamicamente
+    gerarFiltrosUF();
     
-    // Atualiza KPIs
-    const ufsUnicas = new Set(summaryData.data.map(row => row[0].formattedValue));
-    document.getElementById('kpiUf').innerText = ufsUnicas.size;
-    document.getElementById('kpiRows').innerText = summaryData.data.length;
-
-    // Renderiza o Cabeçalho da Tabela
-    const headerRow = document.getElementById('tableHeader');
-    headerRow.innerHTML = '';
-    summaryData.columns.forEach(col => {
-      const th = document.createElement('th');
-      th.innerText = col.fieldName;
-      headerRow.appendChild(th);
-    });
-
-    // Renderiza o Corpo da Tabela com os Valores das Medidas por UF
-    const tableBody = document.getElementById('tableBody');
-    tableBody.innerHTML = '';
-
-    summaryData.data.forEach(row => {
-      const tr = document.createElement('tr');
-      row.forEach(cell => {
-        const td = document.createElement('td');
-        td.innerText = cell.formattedValue !== undefined ? cell.formattedValue : cell.value;
-        tr.appendChild(td);
-      });
-      tableBody.appendChild(tr);
-    });
-
-    // Oculta o status após carregar com sucesso
-    document.getElementById('status').style.display = 'none';
+    // Renderizar painel
+    renderizarPainel();
 
   } catch (error) {
-    document.getElementById('status').innerText = '❌ Erro ao ler dados da planilha: ' + error.toString();
+    console.error('Erro ao ler dados:', error);
   }
+}
+
+function gerarFiltrosUF() {
+  const ufs = new Set();
+  
+  rawData.forEach(row => {
+    const ufVal = row[0].formattedValue || row[0].value;
+    if (ufVal) ufs.add(ufVal);
+  });
+
+  const container = document.getElementById('ufFilters');
+  container.innerHTML = `
+    <div class="pill ${selectedUF === 'TODOS' ? 'active' : ''}" onclick="filtrarUF('TODOS')">
+      <i class="fa-solid fa-globe"></i> Todos
+    </div>
+  `;
+
+  Array.from(ufs).sort().forEach(uf => {
+    const pill = document.createElement('div');
+    pill.className = `pill ${selectedUF === uf ? 'active' : ''}`;
+    pill.onclick = () => filtrarUF(uf);
+    pill.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${uf}`;
+    container.appendChild(pill);
+  });
+}
+
+function filtrarUF(uf) {
+  selectedUF = uf;
+  gerarFiltrosUF();
+  renderizarPainel();
+
+  // Aplica o filtro interativo também na planilha nativa do Tableau se necessário
+  const dashboard = tableau.extensions.dashboardContent.dashboard;
+  const worksheet = dashboard.worksheets.find(ws => ws.name === 'PlanTeste') || dashboard.worksheets[0];
+
+  if (worksheet) {
+    if (uf === 'TODOS') {
+      worksheet.clearFilterAsync('UF');
+    } else {
+      worksheet.applyFilterAsync('UF', [uf], tableau.FilterUpdateType.Replace);
+    }
+  }
+}
+
+function renderizarPainel() {
+  // Filtrar linhas
+  const filteredData = selectedUF === 'TODOS' 
+    ? rawData 
+    : rawData.filter(row => (row[0].formattedValue || row[0].value) === selectedUF);
+
+  // Calcular KPIs
+  let totalApto = 0;
+  let totalEnf = 0;
+  let totalSuperior = 0;
+
+  filteredData.forEach(row => {
+    row.forEach((cell, idx) => {
+      const colName = allColumns[idx].fieldName.toLowerCase();
+      const val = parseFloat(cell.value) || 0;
+
+      if (colName.includes('apto')) totalApto += val;
+      if (colName.includes('enf')) totalEnf += val;
+      if (colName.includes('superior')) totalSuperior += val;
+    });
+  });
+
+  const uniqueUFs = new Set(filteredData.map(r => r[0].formattedValue || r[0].value));
+  document.getElementById('kpiUfCount').innerText = uniqueUFs.size;
+  document.getElementById('kpiApto').innerText = totalApto.toLocaleString('pt-BR');
+  document.getElementById('kpiEnf').innerText = totalEnf.toLocaleString('pt-BR');
+  document.getElementById('kpiSuperior').innerText = totalSuperior.toLocaleString('pt-BR');
+
+  // Renderizar Cabeçalho da Tabela
+  const headerRow = document.getElementById('tableHeader');
+  headerRow.innerHTML = '';
+  allColumns.forEach(col => {
+    const th = document.createElement('th');
+    th.innerText = col.fieldName;
+    headerRow.appendChild(th);
+  });
+
+  // Renderizar Linhas da Tabela
+  const tableBody = document.getElementById('tableBody');
+  tableBody.innerHTML = '';
+
+  filteredData.forEach(row => {
+    const tr = document.createElement('tr');
+    row.forEach(cell => {
+      const td = document.createElement('td');
+      td.innerText = cell.formattedValue !== undefined ? cell.formattedValue : cell.value;
+      tr.appendChild(td);
+    });
+    tableBody.appendChild(tr);
+  });
 }
