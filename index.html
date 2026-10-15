@@ -3,75 +3,234 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel Web Tableau - PlanTeste</title>
+  <title>Dashboard Unimed CNU - Executive View</title>
   
-  <!-- SDK oficial da API de Extensões do Tableau -->
+  <!-- SDK de Extensões do Tableau -->
   <script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api/lib/tableau.extensions.1.latest.js"></script>
+
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
     :root {
-      --bg-color: #f8fafc;
-      --card-bg: #ffffff;
-      --primary-color: #2563eb;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --border-color: #e2e8f0;
+      --bg-deep: #071510;
+      --bg-card: #0f271f;
+      --bg-card-hover: #16382c;
+      --accent-unimed: #00995d;
+      --accent-glow: #00e68a;
+      --text-bright: #ffffff;
+      --text-sub: #94a3b8;
+      --border-color: rgba(0, 153, 93, 0.2);
+      --border-hover: rgba(0, 230, 138, 0.5);
+      --shadow-glow: 0 0 20px rgba(0, 230, 138, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      transition: all 0.2s ease-in-out;
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: radial-gradient(circle at top right, #0f2d22 0%, var(--bg-deep) 60%);
+      color: var(--text-bright);
       margin: 0;
-      padding: 16px;
+      padding: 24px;
+      min-height: 100vh;
     }
 
-    .header h1 {
+    /* HEADER & BRANDING */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 16px 24px;
+      border-radius: 16px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--accent-unimed), var(--accent-glow));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      color: #000;
+      box-shadow: var(--shadow-glow);
+    }
+
+    .brand-title h1 {
       font-size: 1.25rem;
-      margin: 0 0 4px 0;
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: -0.02em;
     }
 
-    .header p {
-      margin: 0 0 16px 0;
-      color: var(--text-muted);
-      font-size: 0.875rem;
+    .brand-title p {
+      margin: 2px 0 0 0;
+      font-size: 0.8rem;
+      color: var(--text-sub);
     }
 
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      padding: 8px 16px;
+      background: rgba(0, 230, 138, 0.1);
+      border: 1px solid var(--border-color);
+      border-radius: 30px;
+      color: var(--accent-glow);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent-glow);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    /* FILTROS E AÇÕES DINÂMICAS */
+    .filter-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 24px;
+    }
+
+    .filter-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+      color: var(--text-sub);
+    }
+
+    .filter-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-bright);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-glow);
+      color: var(--accent-glow);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .pill.active {
+      background: var(--accent-unimed);
+      border-color: var(--accent-glow);
+      color: #fff;
+      box-shadow: var(--shadow-glow);
+    }
+
+    /* CARDS KPIS COM INTERAÇÃO HOVER */
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
     }
 
     .kpi-card {
-      background: var(--card-bg);
+      background: var(--bg-card);
       border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 14px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      border-radius: 16px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
     }
 
-    .kpi-card .title {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 6px;
+    .kpi-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-hover);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4), var(--shadow-glow);
     }
 
-    .kpi-card .value {
+    .kpi-icon {
+      position: absolute;
+      top: 20px;
+      right: 20px;
       font-size: 1.5rem;
+      color: var(--text-sub);
+      opacity: 0.5;
+    }
+
+    .kpi-card:hover .kpi-icon {
+      color: var(--accent-glow);
+      opacity: 1;
+      transform: scale(1.15) rotate(5deg);
+      filter: drop-shadow(0 0 8px var(--accent-glow));
+    }
+
+    .kpi-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-sub);
+      margin-bottom: 8px;
+    }
+
+    .kpi-value {
+      font-size: 1.8rem;
       font-weight: 700;
-      color: var(--primary-color);
+      color: var(--text-bright);
+    }
+
+    .kpi-card:hover .kpi-value {
+      color: var(--accent-glow);
+    }
+
+    /* TABELA ESTILIZADA DE ALTO DESEMPENHO */
+    .table-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
 
     .table-container {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
       overflow-x: auto;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
 
     table {
@@ -82,59 +241,96 @@
     }
 
     th {
-      background-color: #f1f5f9;
-      color: var(--text-muted);
+      color: var(--text-sub);
       font-weight: 600;
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--border-color);
+      padding: 14px;
+      border-bottom: 2px solid var(--border-color);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
     }
 
     td {
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--border-color);
+      padding: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--text-bright);
     }
 
-    #status {
-      padding: 12px;
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      color: #1e40af;
-      border-radius: 6px;
-      font-size: 0.875rem;
-      margin-bottom: 16px;
+    tr:hover td {
+      background: var(--bg-card-hover);
+      color: var(--accent-glow);
     }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <h1>Painel Web Customizado</h1>
-    <p>Consumindo a planilha <strong>PlanTeste</strong> em tempo real</p>
+  <!-- HEADER CORPORATIVO UNIMED -->
+  <div class="header-bar">
+    <div class="brand">
+      <div class="brand-icon">
+        <i class="fa-solid fa-hospital-user"></i>
+      </div>
+      <div class="brand-title">
+        <h1>Unimed CNU — Painel Executivo</h1>
+        <p>Visão Integrada de Indicadores & Métricas por UF</p>
+      </div>
+    </div>
+    <div class="status-badge">
+      <div class="status-dot"></div>
+      <span id="statusText">Conectando ao Tableau...</span>
+    </div>
   </div>
 
-  <div id="status">🔄 Conectando à planilha do Tableau...</div>
+  <!-- FILTRO DE UFs DINÂMICO -->
+  <div class="filter-section">
+    <div class="filter-header">
+      <i class="fa-solid fa-filter"></i>
+      <span>Filtrar por Estado (UF):</span>
+    </div>
+    <div class="filter-pills" id="ufFilters">
+      <div class="pill active" onclick="filtrarUF('TODOS')">
+        <i class="fa-solid fa-globe"></i> Todos
+      </div>
+      <!-- Botões de UF serão gerados dinamicamente via JS -->
+    </div>
+  </div>
 
+  <!-- CARDS DE METRICAS (KPIS) -->
   <div class="kpi-grid">
     <div class="kpi-card">
-      <div class="title">Total de UFs</div>
-      <div class="value" id="kpiUf">-</div>
+      <i class="fa-solid fa-map-location-dot kpi-icon"></i>
+      <div class="kpi-title">Estados Ativos</div>
+      <div class="kpi-value" id="kpiUfCount">-</div>
     </div>
     <div class="kpi-card">
-      <div class="title">Total de Registros Lidos</div>
-      <div class="value" id="kpiRows">-</div>
+      <i class="fa-solid fa-bed kpi-icon"></i>
+      <div class="kpi-title">Total Absoluto Apto</div>
+      <div class="kpi-value" id="kpiApto">-</div>
+    </div>
+    <div class="kpi-card">
+      <i class="fa-solid fa-user-nurse kpi-icon"></i>
+      <div class="kpi-title">Total Absoluto Enf</div>
+      <div class="kpi-value" id="kpiEnf">-</div>
+    </div>
+    <div class="kpi-card">
+      <i class="fa-solid fa-chart-line kpi-icon"></i>
+      <div class="kpi-title">Total Superior</div>
+      <div class="kpi-value" id="kpiSuperior">-</div>
     </div>
   </div>
 
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr id="tableHeader"></tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
+  <!-- TABELA DE DADOS -->
+  <div class="table-card">
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr id="tableHeader"></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
   </div>
 
-  <!-- Carrega a lógica JS externa -->
   <script src="app.js"></script>
 </body>
 </html>
