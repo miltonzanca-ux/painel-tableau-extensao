@@ -2,7 +2,7 @@ let rawData = [];
 let allColumns = [];
 let selectedUF = 'TODOS';
 
-// Auto-ajuste de escala da tela (Efeito Palco Projeção 1920x1080)
+// Redimensionamento do Palco (1920x1080)
 function ajustaPalco() {
   const p = document.getElementById('palco');
   if (!p) return;
@@ -10,31 +10,31 @@ function ajustaPalco() {
   p.style.transform = `translate(${-960 * k}px,${-540 * k}px) scale(${k})`;
 }
 
-window.addEventListener('resize', ajustaPalco);
+window.addEventListener('resize', () => { ajustaPalco(); renderizarGrafico(); });
 ajustaPalco();
 
-// Conexão com o SDK da Extensão do Tableau
+// Conexão com o Tableau
 tableau.extensions.initializeAsync().then(() => {
-  document.getElementById('statusFooter').innerText = '✅ Conectado ao modelo do Tableau com sucesso.';
-  carregarDadosPlanTeste();
+  document.getElementById('rod').innerText = 'Conectado ao Tableau com sucesso. Dados sincronizados.';
+  carregarDadosTableau();
 
   const dashboard = tableau.extensions.dashboardContent.dashboard;
   const worksheet = dashboard.worksheets.find(ws => ws.name === 'PlanTeste') || dashboard.worksheets[0];
 
   if (worksheet) {
-    worksheet.addEventListener(tableau.TableauEventType.FilterChanged, carregarDadosPlanTeste);
-    worksheet.addEventListener(tableau.TableauEventType.MarkSelectionChanged, carregarDadosPlanTeste);
+    worksheet.addEventListener(tableau.TableauEventType.FilterChanged, carregarDadosTableau);
+    worksheet.addEventListener(tableau.TableauEventType.MarkSelectionChanged, carregarDadosTableau);
   }
 }).catch((err) => {
-  document.getElementById('statusFooter').innerText = '❌ Erro de conexão com o Tableau: ' + err.toString();
+  document.getElementById('rod').innerText = 'Erro ao conectar no Tableau: ' + err.toString();
 });
 
-async function carregarDadosPlanTeste() {
+async function carregarDadosTableau() {
   const dashboard = tableau.extensions.dashboardContent.dashboard;
   const worksheet = dashboard.worksheets.find(ws => ws.name === 'PlanTeste') || dashboard.worksheets[0];
 
   if (!worksheet) {
-    document.getElementById('statusFooter').innerText = '⚠️ Planilha "PlanTeste" não localizada no Dashboard.';
+    document.getElementById('rod').innerText = 'Aviso: Planilha "PlanTeste" não encontrada no Dashboard.';
     return;
   }
 
@@ -43,18 +43,15 @@ async function carregarDadosPlanTeste() {
     allColumns = summaryData.columns;
     rawData = summaryData.data;
 
-    // Gerar Botões de UF
-    gerarFiltrosUF();
-
-    // Renderizar Indicadores e Tabela
+    gerarBotoesUF();
     renderizarPainel();
 
   } catch (error) {
-    document.getElementById('statusFooter').innerText = '❌ Erro ao ler dados: ' + error.toString();
+    document.getElementById('rod').innerText = 'Erro ao ler dados: ' + error.toString();
   }
 }
 
-function gerarFiltrosUF() {
+function gerarBotoesUF() {
   const ufs = new Set();
   
   rawData.forEach(row => {
@@ -62,26 +59,25 @@ function gerarFiltrosUF() {
     if (ufVal) ufs.add(ufVal);
   });
 
-  const container = document.getElementById('ufFilterButtons');
+  const container = document.getElementById('ufContainer');
   container.innerHTML = `
-    <button class="uf-btn ${selectedUF === 'TODOS' ? 'active' : ''}" onclick="filtrarUF('TODOS')">TODOS</button>
+    <span class="${selectedUF === 'TODOS' ? 'active' : ''}" onclick="filtrarUF('TODOS')">TODOS</span>
   `;
 
   Array.from(ufs).sort().forEach(uf => {
-    const btn = document.createElement('button');
-    btn.className = `uf-btn ${selectedUF === uf ? 'active' : ''}`;
-    btn.onclick = () => filtrarUF(uf);
-    btn.innerText = uf;
-    container.appendChild(btn);
+    const span = document.createElement('span');
+    span.className = selectedUF === uf ? 'active' : '';
+    span.onclick = () => filtrarUF(uf);
+    span.innerText = uf;
+    container.appendChild(span);
   });
 }
 
 function filtrarUF(uf) {
   selectedUF = uf;
-  gerarFiltrosUF();
+  gerarBotoesUF();
   renderizarPainel();
 
-  // Aplica o filtro diretamente na planilha nativa do Tableau
   const dashboard = tableau.extensions.dashboardContent.dashboard;
   const worksheet = dashboard.worksheets.find(ws => ws.name === 'PlanTeste') || dashboard.worksheets[0];
 
@@ -95,12 +91,10 @@ function filtrarUF(uf) {
 }
 
 function renderizarPainel() {
-  // Filtrar Dados
   const filteredData = selectedUF === 'TODOS'
     ? rawData
     : rawData.filter(row => (row[0].formattedValue || row[0].value) === selectedUF);
 
-  // Calcular métricas das Medidas
   let totalApto = 0;
   let totalEnf = 0;
   let totalSuperior = 0;
@@ -116,15 +110,17 @@ function renderizarPainel() {
     });
   });
 
-  const uniqueUFs = new Set(filteredData.map(r => r[0].formattedValue || r[0].value));
-  
-  document.getElementById('totalUfDisplay').innerText = selectedUF === 'TODOS' ? `${uniqueUFs.size} UFs` : selectedUF;
+  document.getElementById('selectedUfText').innerText = selectedUF;
   document.getElementById('kpiApto').innerText = totalApto.toLocaleString('pt-BR');
   document.getElementById('kpiEnf').innerText = totalEnf.toLocaleString('pt-BR');
   document.getElementById('kpiSuperior').innerText = totalSuperior.toLocaleString('pt-BR');
-  document.getElementById('kpiCount').innerText = filteredData.length.toLocaleString('pt-BR');
 
-  // Renderizar Tabela (Cabeçalho)
+  const totalGeral = totalApto + totalSuperior;
+  const prop = totalGeral > 0 ? (totalApto / totalGeral) * 100 : 0;
+  document.getElementById('kpiProp').innerText = prop.toFixed(1) + '%';
+  document.getElementById('barProp').style.width = prop + '%';
+
+  // Renderizar Tabela
   const headerRow = document.getElementById('tableHeader');
   headerRow.innerHTML = '';
   allColumns.forEach(col => {
@@ -133,10 +129,8 @@ function renderizarPainel() {
     headerRow.appendChild(th);
   });
 
-  // Renderizar Tabela (Linhas)
   const tableBody = document.getElementById('tableBody');
   tableBody.innerHTML = '';
-
   filteredData.forEach(row => {
     const tr = document.createElement('tr');
     row.forEach(cell => {
@@ -146,4 +140,46 @@ function renderizarPainel() {
     });
     tableBody.appendChild(tr);
   });
+
+  renderizarGrafico();
+}
+
+function renderizarGrafico() {
+  const box = document.getElementById('graf');
+  const W = box.clientWidth;
+  const H = box.clientHeight;
+  if (!W || !H || rawData.length === 0) return;
+
+  const m = { l: 40, r: 40, t: 40, b: 40 };
+  const ufs = Array.from(new Set(rawData.map(r => r[0].formattedValue || r[0].value)));
+  const n = ufs.length;
+
+  // Pontos base para o SVG
+  const x = i => m.l + (i + 0.5) * (W - m.l - m.r) / (n || 1);
+  const maxVal = 3000;
+  const y = v => m.t + (1 - (v / maxVal)) * (H - m.t - m.b);
+
+  let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
+
+  // Linhas de Grade
+  [1000, 2000, 3000].forEach(v => {
+    s += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="#1E3B37" stroke-width="1" stroke-dasharray="4 4"/>`;
+  });
+
+  // Plotagem dos dados das UFs
+  ufs.forEach((uf, i) => {
+    const row = rawData.find(r => (r[0].formattedValue || r[0].value) === uf);
+    let val = 0;
+    if (row && row[1]) val = parseFloat(row[1].value) || 500;
+
+    const cx = x(i);
+    const cy = y(val);
+
+    s += `<circle class="graf-point" cx="${cx}" cy="${cy}" r="7" fill="#4BB3C6" stroke="#0C201E" stroke-width="2"><title>${uf}: ${val}</title></circle>`;
+    s += `<text x="${cx}" y="${cy - 14}" text-anchor="middle" fill="#ECF3F0" font-size="14" font-weight="700">${val.toFixed(0)}</text>`;
+    s += `<text x="${cx}" y="${H - 10}" text-anchor="middle" fill="#7F9893" font-size="14">${uf}</text>`;
+  });
+
+  s += '</svg>';
+  box.innerHTML = s;
 }
