@@ -2,41 +2,55 @@ let rawData = [];
 let allColumns = [];
 let selectedUF = 'TODOS';
 
+// Auto-ajuste de escala da tela (Efeito Palco Projeção 1920x1080)
+function ajustaPalco() {
+  const p = document.getElementById('palco');
+  if (!p) return;
+  const k = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  p.style.transform = `translate(${-960 * k}px,${-540 * k}px) scale(${k})`;
+}
+
+window.addEventListener('resize', ajustaPalco);
+ajustaPalco();
+
+// Conexão com o SDK da Extensão do Tableau
 tableau.extensions.initializeAsync().then(() => {
-  document.getElementById('statusText').innerText = 'Online • Tableau Connected';
-  carregarEProcessarDados();
+  document.getElementById('statusFooter').innerText = '✅ Conectado ao modelo do Tableau com sucesso.';
+  carregarDadosPlanTeste();
 
   const dashboard = tableau.extensions.dashboardContent.dashboard;
   const worksheet = dashboard.worksheets.find(ws => ws.name === 'PlanTeste') || dashboard.worksheets[0];
 
   if (worksheet) {
-    worksheet.addEventListener(tableau.TableauEventType.FilterChanged, carregarEProcessarDados);
-    worksheet.addEventListener(tableau.TableauEventType.MarkSelectionChanged, carregarEProcessarDados);
+    worksheet.addEventListener(tableau.TableauEventType.FilterChanged, carregarDadosPlanTeste);
+    worksheet.addEventListener(tableau.TableauEventType.MarkSelectionChanged, carregarDadosPlanTeste);
   }
 }).catch((err) => {
-  document.getElementById('statusText').innerText = 'Erro na Conexão';
-  console.error(err);
+  document.getElementById('statusFooter').innerText = '❌ Erro de conexão com o Tableau: ' + err.toString();
 });
 
-async function carregarEProcessarDados() {
+async function carregarDadosPlanTeste() {
   const dashboard = tableau.extensions.dashboardContent.dashboard;
   const worksheet = dashboard.worksheets.find(ws => ws.name === 'PlanTeste') || dashboard.worksheets[0];
 
-  if (!worksheet) return;
+  if (!worksheet) {
+    document.getElementById('statusFooter').innerText = '⚠️ Planilha "PlanTeste" não localizada no Dashboard.';
+    return;
+  }
 
   try {
     const summaryData = await worksheet.getSummaryDataAsync();
     allColumns = summaryData.columns;
     rawData = summaryData.data;
 
-    // Gerar os botões de UF dinamicamente
+    // Gerar Botões de UF
     gerarFiltrosUF();
-    
-    // Renderizar painel
+
+    // Renderizar Indicadores e Tabela
     renderizarPainel();
 
   } catch (error) {
-    console.error('Erro ao ler dados:', error);
+    document.getElementById('statusFooter').innerText = '❌ Erro ao ler dados: ' + error.toString();
   }
 }
 
@@ -48,19 +62,17 @@ function gerarFiltrosUF() {
     if (ufVal) ufs.add(ufVal);
   });
 
-  const container = document.getElementById('ufFilters');
+  const container = document.getElementById('ufFilterButtons');
   container.innerHTML = `
-    <div class="pill ${selectedUF === 'TODOS' ? 'active' : ''}" onclick="filtrarUF('TODOS')">
-      <i class="fa-solid fa-globe"></i> Todos
-    </div>
+    <button class="uf-btn ${selectedUF === 'TODOS' ? 'active' : ''}" onclick="filtrarUF('TODOS')">TODOS</button>
   `;
 
   Array.from(ufs).sort().forEach(uf => {
-    const pill = document.createElement('div');
-    pill.className = `pill ${selectedUF === uf ? 'active' : ''}`;
-    pill.onclick = () => filtrarUF(uf);
-    pill.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${uf}`;
-    container.appendChild(pill);
+    const btn = document.createElement('button');
+    btn.className = `uf-btn ${selectedUF === uf ? 'active' : ''}`;
+    btn.onclick = () => filtrarUF(uf);
+    btn.innerText = uf;
+    container.appendChild(btn);
   });
 }
 
@@ -69,7 +81,7 @@ function filtrarUF(uf) {
   gerarFiltrosUF();
   renderizarPainel();
 
-  // Aplica o filtro interativo também na planilha nativa do Tableau se necessário
+  // Aplica o filtro diretamente na planilha nativa do Tableau
   const dashboard = tableau.extensions.dashboardContent.dashboard;
   const worksheet = dashboard.worksheets.find(ws => ws.name === 'PlanTeste') || dashboard.worksheets[0];
 
@@ -83,12 +95,12 @@ function filtrarUF(uf) {
 }
 
 function renderizarPainel() {
-  // Filtrar linhas
-  const filteredData = selectedUF === 'TODOS' 
-    ? rawData 
+  // Filtrar Dados
+  const filteredData = selectedUF === 'TODOS'
+    ? rawData
     : rawData.filter(row => (row[0].formattedValue || row[0].value) === selectedUF);
 
-  // Calcular KPIs
+  // Calcular métricas das Medidas
   let totalApto = 0;
   let totalEnf = 0;
   let totalSuperior = 0;
@@ -105,12 +117,14 @@ function renderizarPainel() {
   });
 
   const uniqueUFs = new Set(filteredData.map(r => r[0].formattedValue || r[0].value));
-  document.getElementById('kpiUfCount').innerText = uniqueUFs.size;
+  
+  document.getElementById('totalUfDisplay').innerText = selectedUF === 'TODOS' ? `${uniqueUFs.size} UFs` : selectedUF;
   document.getElementById('kpiApto').innerText = totalApto.toLocaleString('pt-BR');
   document.getElementById('kpiEnf').innerText = totalEnf.toLocaleString('pt-BR');
   document.getElementById('kpiSuperior').innerText = totalSuperior.toLocaleString('pt-BR');
+  document.getElementById('kpiCount').innerText = filteredData.length.toLocaleString('pt-BR');
 
-  // Renderizar Cabeçalho da Tabela
+  // Renderizar Tabela (Cabeçalho)
   const headerRow = document.getElementById('tableHeader');
   headerRow.innerHTML = '';
   allColumns.forEach(col => {
@@ -119,7 +133,7 @@ function renderizarPainel() {
     headerRow.appendChild(th);
   });
 
-  // Renderizar Linhas da Tabela
+  // Renderizar Tabela (Linhas)
   const tableBody = document.getElementById('tableBody');
   tableBody.innerHTML = '';
 
