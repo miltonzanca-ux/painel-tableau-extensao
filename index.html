@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel Interativo Tableau</title>
+  <title>Painel Web Tableau - PlanTeste</title>
   
-  <!-- SDK de Extensões do Tableau -->
+  <!-- SDK oficial da API de Extensões do Tableau -->
   <script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api/lib/tableau.extensions.1.latest.js"></script>
 
   <style>
@@ -26,22 +26,17 @@
       padding: 16px;
     }
 
-    .header {
-      margin-bottom: 20px;
-    }
-
     .header h1 {
       font-size: 1.25rem;
       margin: 0 0 4px 0;
     }
 
     .header p {
-      margin: 0;
+      margin: 0 0 16px 0;
       color: var(--text-muted);
       font-size: 0.875rem;
     }
 
-    /* Cards de Estatísticas / KPIs */
     .kpi-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -71,7 +66,6 @@
       color: var(--primary-color);
     }
 
-    /* Tabela Estilizada */
     .table-container {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -100,14 +94,6 @@
       border-bottom: 1px solid var(--border-color);
     }
 
-    tr:last-child td {
-      border-bottom: none;
-    }
-
-    tr:hover {
-      background-color: #f8fafc;
-    }
-
     #status {
       padding: 12px;
       background: #eff6ff;
@@ -122,25 +108,23 @@
 <body>
 
   <div class="header">
-    <h1>Painel Customizado Web</h1>
-    <p>Conectado ao modelo de dados do Tableau em tempo real</p>
+    <h1>Painel Web Customizado</h1>
+    <p>Consumindo a planilha <strong>PlanTeste</strong> em tempo real</p>
   </div>
 
-  <div id="status">🔄 Conectando à API do Tableau...</div>
+  <div id="status">🔄 Conectando à planilha do Tableau...</div>
 
-  <!-- Cards de Resumo -->
   <div class="kpi-grid">
     <div class="kpi-card">
-      <div class="title">Total de Registros</div>
-      <div class="value" id="totalRows">-</div>
+      <div class="title">Total de UFs</div>
+      <div class="value" id="kpiUf">-</div>
     </div>
     <div class="kpi-card">
-      <div class="title">Colunas Lidas</div>
-      <div class="value" id="totalCols">-</div>
+      <div class="title">Total de Registros Lidos</div>
+      <div class="value" id="kpiRows">-</div>
     </div>
   </div>
 
-  <!-- Tabela de Dados -->
   <div class="table-container">
     <table>
       <thead>
@@ -150,6 +134,7 @@
     </table>
   </div>
 
+  <!-- Carrega a lógica JS externa -->
   <script src="app.js"></script>
 </body>
 </html>
