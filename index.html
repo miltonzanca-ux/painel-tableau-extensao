@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="pt-PT">
+<html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Unimed CNU · Sala de Situação · PlanTeste</title>
+<title>Projeção por Autorizações · Sala de Situação</title>
 
-<!-- SDK oficial do Tableau Extensions -->
+<!-- SDK de Extensões do Tableau -->
 <script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api/lib/tableau.extensions.1.latest.js"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,9 +28,7 @@
   --proj: #F5C27A;
   --ok: #8FE3B4;
   --bad: #FFB3A3;
-  --or: #F58A3D;
   --co: #1FB676;
-  --mx: #D4B45C;
   --glow: rgba(245, 194, 122, 0.15);
   color-scheme: dark;
 }
@@ -42,7 +40,6 @@ body {
   overflow: hidden;
 }
 * { box-sizing: border-box; }
-[hidden] { display: none !important; }
 
 #palco {
   position: absolute;
@@ -80,7 +77,7 @@ body {
 
 .rot {
   white-space: nowrap;
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 700;
   letter-spacing: .1em;
   color: var(--tx2);
@@ -89,7 +86,7 @@ body {
   align-items: center;
   gap: 10px;
 }
-.dot { width: 14px; height: 14px; border-radius: 50%; flex: none; box-shadow: 0 0 10px var(--co); background: var(--co); }
+.dot { width: 14px; height: 14px; border-radius: 50%; flex: none; box-shadow: 0 0 10px var(--proj); background: var(--proj); }
 .ok { color: var(--ok); }
 .bad { color: var(--bad); }
 .fil {
@@ -100,7 +97,7 @@ body {
   opacity: 0.9;
 }
 
-/* Cabeçalho */
+/* Cabeçalho Primário */
 header {
   height: 112px;
   flex: none;
@@ -112,125 +109,81 @@ header {
   box-shadow: 0 4px 20px rgba(0,0,0,0.4);
   z-index: 10;
 }
+.logo-box {
+  width: 158px; height: 58px; background: rgba(255,255,255,0.1);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: bold; letter-spacing: 1px; font-size: 18px;
+}
 .pill {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 20px;
-  border-radius: 999px;
-  background: rgba(10, 46, 43, 0.8);
-  border: 1px solid var(--bd2);
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: .06em;
-  white-space: nowrap;
-  backdrop-filter: blur(4px);
+  display: flex; align-items: center; gap: 12px; padding: 10px 20px;
+  border-radius: 999px; background: rgba(10, 46, 43, 0.8);
+  border: 1px solid var(--bd2); font-size: 20px; font-weight: 700;
+  letter-spacing: .06em; white-space: nowrap; backdrop-filter: blur(4px);
 }
 
-/* Faixa com Filtro Suspenso Estilizado */
+/* Faixa Secundária com Filtro Suspenso */
 .faixa {
-  height: 64px;
-  flex: none;
-  padding: 0 48px;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  border-bottom: 1px solid var(--bd);
-  font-size: 21px;
-  color: var(--tx2);
-  white-space: nowrap;
+  height: 60px; flex: none; padding: 0 48px; display: flex;
+  align-items: center; gap: 24px; border-bottom: 1px solid var(--bd);
+  font-size: 20px; color: var(--tx2); white-space: nowrap;
   background: rgba(12, 32, 30, 0.5);
 }
+.sel-label { font-weight: 700; color: var(--tx); display: flex; align-items: center; gap: 10px; }
 
-/* Estilo Executivo do Select (Dropdown) */
+/* Select Personalizado */
 .custom-select {
-  font-family: inherit;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--gold);
-  background: var(--card2);
-  border: 1px solid var(--bd2);
-  border-radius: 8px;
-  padding: 8px 18px;
-  cursor: pointer;
-  outline: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  font-family: inherit; font-size: 18px; font-weight: 700; color: var(--gold);
+  background: var(--card2); border: 1px solid var(--bd2); border-radius: 6px;
+  padding: 6px 16px; cursor: pointer; outline: none; transition: all 0.2s;
+}
+.custom-select:hover { background: var(--bd2); box-shadow: 0 0 10px rgba(242, 206, 121, 0.2); }
+.custom-select option { background: var(--card); color: var(--tx); }
+
+.leg { display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 18px; }
+.tag {
+  margin-left: auto; font-size: 15px; font-weight: 700; letter-spacing: .1em;
+  color: var(--proj); border: 1px dashed #7a6136; border-radius: 999px;
+  padding: 6px 14px; background: rgba(245, 194, 122, 0.05); cursor: pointer;
 }
 
-.custom-select:hover, .custom-select:focus {
-  border-color: var(--co);
-  box-shadow: 0 0 12px rgba(31, 182, 118, 0.3);
-  background: var(--card-hover);
-}
-
-.custom-select option {
-  background: var(--card);
-  color: var(--tx);
-  font-weight: 600;
-  padding: 10px;
-}
-
+/* Grid Principal */
 main {
-  flex: 1;
-  min-height: 0;
-  padding: 24px 48px;
-  display: grid;
+  flex: 1; min-height: 0; padding: 24px 48px; display: grid;
   grid-template-columns: 720px 1fr;
-  grid-template-rows: minmax(0, 1fr) 300px;
-  gap: 24px;
+  grid-template-rows: minmax(0, 1fr) 300px; gap: 24px;
 }
 
-/* Hero */
+/* Bloco Hero */
 .hero { padding: 32px 40px 30px; display: flex; flex-direction: column; }
 .hero .num {
-  white-space: nowrap;
-  font-size: 110px;
-  font-weight: 800;
-  line-height: 0.95;
-  letter-spacing: -.02em;
-  margin-top: 14px;
-  text-shadow: 0 0 40px var(--glow);
-  color: var(--gold);
+  white-space: nowrap; font-size: 128px; font-weight: 800; line-height: 0.95;
+  letter-spacing: -.02em; margin-top: 14px; text-shadow: 0 0 40px var(--glow);
 }
-
-.kpi-subgrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-top: 20px;
-}
-.kpi-subbox {
-  background: var(--card2);
-  border: 1px solid var(--bd);
-  border-radius: 12px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-}
-.kpi-subbox .val {
-  font-size: 32px;
-  font-weight: 800;
-  color: var(--tx);
-  margin-top: 6px;
-}
+.hero .num small { font-size: 58px; font-weight: 700; letter-spacing: 0; color: var(--tx2); }
+.delta { display: flex; flex-direction: column; gap: 6px; margin-top: 22px; font-size: 23px; color: var(--tx2); }
+.delta b { font-size: 32px; font-weight: 800; }
+.comps { display: flex; gap: 28px; margin-top: 18px; font-size: 20px; color: var(--tx3); }
+.comps b { font-weight: 800; }
 
 .ritmo { margin-top: auto; display: flex; flex-direction: column; gap: 12px; }
-.ritmo .lin { white-space: nowrap; display: flex; justify-content: space-between; font-size: 21px; color: var(--tx2); }
+.ritmo .lin { display: flex; justify-content: space-between; font-size: 21px; color: var(--tx2); }
 .ritmo .lin b { color: var(--tx); font-weight: 700; }
 .barra {
   position: relative; height: 22px; border-radius: 11px;
   background: #08201D; border: 1px solid var(--bd); overflow: visible;
 }
 .barra i {
-  position: absolute; left: 0; top: 0; bottom: 0;
-  border-radius: 11px;
+  position: absolute; left: 0; top: 0; bottom: 0; border-radius: 11px;
   background: linear-gradient(90deg, #2C8FA2, var(--real));
-  box-shadow: 0 0 10px rgba(75, 179, 198, 0.4);
-  transition: width 1s ease-in-out;
+  box-shadow: 0 0 10px rgba(75, 179, 198, 0.4); transition: width 1s ease-in-out;
 }
+.barra em {
+  position: absolute; top: -8px; bottom: -8px; width: 4px;
+  background: var(--gold); border-radius: 2px; box-shadow: 0 0 8px var(--gold);
+}
+.ritmo .sub { display: flex; justify-content: space-between; font-size: 18px; color: var(--tx3); }
 
-/* Gráfico */
+/* Bloco Gráfico Evolutivo */
 .evo { padding: 26px 32px 18px; display: flex; flex-direction: column; }
 .evo .cab { display: flex; justify-content: space-between; align-items: baseline; }
 .evo h2 { margin: 0; font-size: 30px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
@@ -240,114 +193,181 @@ main {
 .graf-point { transition: r 0.2s, stroke-width 0.2s; cursor: crosshair; }
 .graf-point:hover { r: 10; stroke-width: 5; }
 
-/* Tabela */
-.base { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr; gap: 24px; min-height: 0; }
+/* Bloco Inferior com 4 Tiles */
+.base { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr 1.42fr 1.12fr; gap: 24px; min-height: 0; }
 .tile { padding: 24px 28px 20px; display: flex; flex-direction: column; gap: 8px; }
+.tile .v { white-space: nowrap; font-size: 54px; font-weight: 800; line-height: 1; margin-top: 8px; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+.tile .v small { font-size: 26px; font-weight: 700; color: var(--tx2); }
+.tile .t { font-size: 17px; color: var(--tx2); line-height: 1.35; }
+.tile .t b { color: var(--tx); font-weight: 700; }
 
-.table-wrapper {
-  overflow-y: auto;
-  max-height: 200px;
-  margin-top: 8px;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 16px;
-}
-th { text-align: left; color: var(--tx3); padding: 8px; border-bottom: 2px solid var(--bd2); font-size: 13px; text-transform: uppercase; }
-td { padding: 8px; border-bottom: 1px solid var(--bd); color: var(--tx); }
-tr:hover td { background: var(--card-hover); color: var(--gold); }
+.mini { margin-top: auto; display: flex; align-items: flex-end; gap: 10px; height: 80px; }
+.mini div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 5px; height: 100%; font-size: 13px; color: var(--tx3); }
+.mini i { width: 100%; border-radius: 4px 4px 0 0; background: #2C6F7A; display: block; transition: height 0.8s ease-out; }
+.mini div.at i { background: repeating-linear-gradient(135deg, var(--real) 0 6px, #2C8FA2 6px 12px); }
+.mini div.at { color: var(--gold); font-weight: 700; }
+
+.grp { display: grid; grid-template-columns: 196px 1fr 72px 78px; align-items: center; column-gap: 12px; row-gap: 12px; margin-top: 10px; font-size: 18px; }
+.grp .n { color: var(--tx2); white-space: nowrap; font-weight: 500; }
+.grp .b { height: 16px; border-radius: 4px; background: linear-gradient(90deg, #2C8FA2, var(--real)); transition: width 1s ease-out; }
+.grp .r { text-align: right; font-weight: 700; }
+.grp .d { text-align: right; font-weight: 700; font-size: 16px; }
+
+.mat { display: flex; height: 50px; border-radius: 8px; overflow: hidden; margin-top: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+.mat div { display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 800; color: #061412; }
+.matl { display: flex; margin-top: 8px; font-size: 15px; color: var(--tx3); font-weight: 500; }
+.matl span { text-align: center; }
 
 footer {
   height: 64px; flex: none; padding: 0 48px; display: flex; align-items: center; gap: 28px;
   background: var(--card); border-top: 1px solid var(--bd); font-size: 21px; white-space: nowrap;
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.2); z-index: 5;
 }
 </style>
 </head>
 <body>
+
 <div id="palco">
   <div class="root">
     
-    <!-- HEADER -->
+    <!-- CABEÇALHO SUPERIOR -->
     <header>
-      <div style="padding: 8px 20px; background: rgba(255,255,255,0.1); border-radius: 8px; font-weight: 800; font-size: 22px; color: white; border: 1px solid var(--bd2);">
-        UNIMED CNU
-      </div>
+      <div class="logo-box">LOGOTIPO</div>
       <div style="width:1px;height:56px;background:var(--bd2)"></div>
       <div style="display:flex;flex-direction:column;gap:6px">
-        <div style="font-size:18px;font-weight:700;letter-spacing:.14em;color:var(--gold)">SALA DE SITUAÇÃO · PLANTESTE TABLEAU</div>
-        <div style="font-size:38px;font-weight:800;line-height:1">Painel Executivo por Estado (UF)</div>
+        <div style="font-size:18px;font-weight:700;letter-spacing:.14em;color:var(--gold)">SALA DE SITUAÇÃO · PROJEÇÃO POR AUTORIZAÇÕES</div>
+        <div style="font-size:38px;font-weight:800;line-height:1">Projeção de Custo por Autorizações</div>
       </div>
       <div style="margin-left:auto;display:flex;align-items:center;gap:36px">
-        <div class="pill"><span class="dot"></span>TABLEAU CONECTADO</div>
+        <div class="pill"><span class="dot"></span>TV 3 · AUTORIZAÇÕES → CUSTO</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <div style="font-size:40px;font-weight:700;line-height:1">15/10</div>
+          <div style="font-size:18px;color:var(--ok);white-space:nowrap;font-weight:500;">● projeção do dia, às 9h</div>
+        </div>
       </div>
     </header>
 
-    <!-- FAIXA COM FILTRO DROPDOWN/SUSPENSO -->
+    <!-- FAIXA SECUNDÁRIA COM FILTRO SUSPENSO POR UF -->
     <div class="faixa">
-      <span style="font-weight:700;color:var(--tx)">Filtrar Estado (UF):</span>
-      <select id="ufSelect" class="custom-select" onchange="filtrarUF(this.value)">
-        <option value="TODOS">TODAS AS UFs</option>
-        <!-- As opções das UFs serão preenchidas dinamicamente via JS -->
-      </select>
+      <div class="sel-label">
+        Mês de out/26 · Estado (UF):
+        <select id="ufSelect" class="custom-select" onchange="filtrarUF(this.value)">
+          <option value="TODOS">TODAS AS UFs</option>
+        </select>
+      </div>
+      <span class="leg" style="margin-left:20px;">
+        <svg width="34" height="8"><line x1="0" y1="4" x2="34" y2="4" stroke="#4BB3C6" stroke-width="5" stroke-linecap="round"/></svg>custo realizado
+      </span>
+      <span class="leg">
+        <svg width="34" height="8"><line x1="2" y1="4" x2="34" y2="4" stroke="#F5C27A" stroke-width="4" stroke-dasharray="2 7" stroke-linecap="round"/></svg>projeção
+      </span>
+      <span class="leg">
+        <span style="width:28px;height:16px;border-radius:3px;background:rgba(245,194,122,.2)"></span>intervalo
+      </span>
+      <button class="tag">ⓘ ESBOÇO · VALORES ILUSTRATIVOS · PREMISSAS</button>
     </div>
 
-    <!-- MAIN -->
+    <!-- MAIN DASHBOARD -->
     <main>
+      
+      <!-- HERO CARD -->
       <section class="card hero">
         <div class="fil" style="background:var(--proj)"></div>
-        <div class="rot">UF SELECIONADA</div>
-        <div class="num" id="selectedUfText">TODAS</div>
-        
-        <div class="kpi-subgrid">
-          <div class="kpi-subbox">
-            <span class="rot" style="font-size:13px;">ABSOLUTO APTO</span>
-            <span class="val" id="kpiApto">-</span>
-          </div>
-          <div class="kpi-subbox">
-            <span class="rot" style="font-size:13px;">ABSOLUTO ENF</span>
-            <span class="val" id="kpiEnf">-</span>
-          </div>
-          <div class="kpi-subbox">
-            <span class="rot" style="font-size:13px;">SUPERIOR</span>
-            <span class="val" id="kpiSuperior">-</span>
-          </div>
+        <div class="rot">Custo projetado de out/26 · total geral</div>
+        <div class="num">R$ <span id="hv">877,8</span> <small>mi</small></div>
+        <div class="delta">
+          <b id="hd" class="ok">▼ −R$ 100,2 mi · −10,2%</b>
+          <span id="hdt">vs fecho de set/26 · R$ 978,0 mi</span>
         </div>
-
+        <div class="comps" id="hc">
+          <span>vs set/26 <b class="ok">−10,2%</b></span>
+          <span>vs out/25 <b class="ok">−2,7%</b></span>
+          <span>vs média 6 meses <b class="ok">−7,9%</b></span>
+        </div>
         <div class="ritmo">
-          <div class="lin"><span>Proporção Apto vs Superior</span><b id="kpiProp">-</b></div>
-          <div class="barra"><i id="barProp" style="width: 0%;"></i></div>
+          <div class="lin"><span>Realizado até hoje <b id="rr">R$ 389,3 mi</b></span><span><b id="rp">44%</b> da projeção</span></div>
+          <div class="barra"><i id="rb" style="width: 44%;"></i><em id="rm" style="left: 48%;"></em></div>
+          <div class="sub"><span id="rs"><span style="color:var(--gold);">▎</span> dia 15 de 31 · 48% do mês</span><span id="rf">faltam R$ 488,5 mi</span></div>
         </div>
       </section>
 
+      <!-- GRÁFICO EVOLUTIVO SVG -->
       <section class="card evo">
         <div class="cab">
-          <h2>Tendência por Estado</h2>
-          <span>Indicadores de Saúde · PlanTeste</span>
+          <h2>Custo assistencial mês a mês</h2>
+          <span>R$ mi · out/25 a dez/26</span>
         </div>
         <div id="graf"></div>
       </section>
 
+      <!-- BASE TILES -->
       <div class="base">
+        
+        <!-- TILE 1: AUTORIZADO NO MÊS -->
         <section class="card tile">
           <div class="fil" style="background:var(--real)"></div>
-          <div class="rot">Detalhamento dos Dados Resumidos (PlanTeste)</div>
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr id="tableHeader"></tr>
-              </thead>
-              <tbody id="tableBody"></tbody>
-            </table>
+          <div class="rot">Autorizado no mês</div>
+          <div class="v">R$ <span id="a1">554,1</span> <small>mi</small></div>
+          <div class="t">solicitado <b>R$ 582,6 mi</b> · negado <b>4,9%</b></div>
+          <div class="t">vs set/26 no mesmo dia <b class="bad">+3,1%</b></div>
+          <div style="font-size:13px;color:var(--tx3);margin-top:2px;">valor autorizado · R$ bi</div>
+          <div class="mini" id="a1m"></div>
+        </section>
+
+        <!-- TILE 2: PROJEÇÃO NOV/26 -->
+        <section class="card tile">
+          <div class="fil" style="background:var(--proj)"></div>
+          <div class="rot">Projeção de nov/26</div>
+          <div class="v">R$ <span id="n1">921,0</span> <small>mi</small></div>
+          <div class="t">intervalo <b>R$ 872 a 970 mi</b></div>
+          <div class="ritmo" style="gap:8px; margin-top: auto;">
+            <div class="lin" style="font-size:17px"><span>já autorizado <b>R$ 214,6 mi</b></span><span><b>23%</b></span></div>
+            <div class="barra" style="height:16px"><i style="background:linear-gradient(90deg,#B8913F,var(--proj)); width: 23%;"></i></div>
+            <div class="sub" style="font-size:15px"><span>com realização prevista em nov</span></div>
           </div>
         </section>
+
+        <!-- TILE 3: POR GRUPO DE SERVIÇO -->
+        <section class="card tile">
+          <div class="fil" style="background:var(--co)"></div>
+          <div class="rot" style="justify-content:space-between">
+            Por grupo de serviço
+            <span style="font-size:14px;letter-spacing:.04em;text-transform:none;color:var(--tx3)">R$ mi · vs set/26</span>
+          </div>
+          <div class="grp" id="grp"></div>
+        </section>
+
+        <!-- TILE 4: QUANDO É FATURADO -->
+        <section class="card tile">
+          <div class="fil" style="background:var(--mx)"></div>
+          <div class="rot">Quando é faturado</div>
+          <div class="t" style="margin-top: 6px;"><b>68%</b> do valor autorizado converte-se em custo até ao mês seguinte</div>
+          <div class="mat" id="mat">
+            <div style="flex:22;background:#4BB3C6">22%</div>
+            <div style="flex:46;background:#8FE3B4">46%</div>
+            <div style="flex:18;background:#F5C27A">18%</div>
+            <div style="flex:14;background:#F58A3D">14%</div>
+          </div>
+          <div class="matl">
+            <span style="flex:22">M0</span>
+            <span style="flex:46">M+1</span>
+            <span style="flex:18">M+2</span>
+            <span style="flex:14">M+3+</span>
+          </div>
+          <div class="t" style="margin-top:auto;font-size:13px;color:var(--tx3);">
+            mês em que o valor autorizado se converte em custo · curva do modelo
+          </div>
+        </section>
+
       </div>
     </main>
 
+    <!-- RODAPÉ -->
     <footer>
-      <span style="font-weight:800;letter-spacing:.12em;color:var(--gold)">STATUS:</span>
-      <span id="rod" style="flex:1;color:var(--tx);overflow:hidden;text-overflow:ellipsis">Lendo dados do modelo Tableau...</span>
+      <span style="font-weight:800;letter-spacing:.12em;color:var(--gold)">ATENÇÃO</span>
+      <span style="flex:1;color:var(--tx);overflow:hidden;text-overflow:ellipsis">
+        Projeção de out/26 10,2% abaixo de set/26 · Maior queda: Urgências −16,4% · Internamento = 40% do projetado
+      </span>
+      <span style="font-size:17px;color:var(--tx3);">Fonte: modelo de projeção do fornecedor</span>
     </footer>
 
   </div>
