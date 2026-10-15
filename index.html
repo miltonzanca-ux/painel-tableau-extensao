@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Interativo Tableau</title>
+  
+  <!-- SDK de Extensões do Tableau -->
+  <script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api/lib/tableau.extensions.1.latest.js"></script>
+
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --primary-color: #2563eb;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+      padding: 16px;
+    }
+
+    .header {
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 1.25rem;
+      margin: 0 0 4px 0;
+    }
+
+    .header p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    /* Cards de Estatísticas / KPIs */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .kpi-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .kpi-card .title {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .kpi-card .value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+
+    /* Tabela Estilizada */
+    .table-container {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow-x: auto;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f1f5f9;
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover {
+      background-color: #f8fafc;
+    }
+
+    #status {
+      padding: 12px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Painel Customizado Web</h1>
+    <p>Conectado ao modelo de dados do Tableau em tempo real</p>
+  </div>
+
+  <div id="status">🔄 Conectando à API do Tableau...</div>
+
+  <!-- Cards de Resumo -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="title">Total de Registros</div>
+      <div class="value" id="totalRows">-</div>
+    </div>
+    <div class="kpi-card">
+      <div class="title">Colunas Lidas</div>
+      <div class="value" id="totalCols">-</div>
+    </div>
+  </div>
+
+  <!-- Tabela de Dados -->
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr id="tableHeader"></tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
